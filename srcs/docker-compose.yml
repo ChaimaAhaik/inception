@@ -1,0 +1,62 @@
+version: "3.8"
+
+services:
+  mariadb:
+    build: ./requirements/mariadb
+    image: mariadb
+    container_name: mariadb
+    restart: unless-stopped
+    volumes:
+      - DB:/var/lib/mysql
+    networks:
+      - my-network
+    env_file:
+      - .env
+
+  wordpress:
+    build: ./requirements/wordpress
+    image: wordpress
+    container_name: wordpress
+    restart: unless-stopped
+    depends_on:
+      - mariadb
+    volumes:
+      - WordPress:/var/www/html
+    networks:
+      - my-network
+    env_file:
+      - .env
+  
+  nginx:
+    build: ./requirements/nginx
+    image: nginx
+    container_name: nginx
+    restart: unless-stopped
+    depends_on:
+      - wordpress
+    ports:
+      - "443:443"
+    volumes:
+      - WordPress:/var/www/html
+    networks:
+      - my-network
+    env_file:
+      - .env
+
+volumes:
+  DB:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/cahaik/data/datadb
+  WordPress:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/cahaik/data/wdpress
+
+networks:
+  my-network:
+    driver: bridge
